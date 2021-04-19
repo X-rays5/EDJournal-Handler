@@ -147,7 +147,8 @@ namespace EDJournalLogger {
             // display information about each process in turn
             do
             {
-                if (pe32.szExeFile == "EliteDangerous64.exe")
+                std::string pName = pe32.szExeFile;
+                if (pName.find("EliteDangerous") != std::string::npos)
                     return true;
             } while( Process32Next( hProcessSnap, &pe32 ) );
 
