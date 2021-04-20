@@ -60,7 +60,7 @@ namespace EDJournalLogger {
                 }
             }
 
-            std::string journal = journal_directory + journal_names.back();
+            std::string journal = journal_directory + "\\" + journal_names.back();
             journal_names.clear(); // no longer needed so cleaning up
 
             ListenToEvents(std::move(journal));
