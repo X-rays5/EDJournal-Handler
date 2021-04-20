@@ -152,6 +152,8 @@ namespace EDJournalLogger {
 
             // Set the size of the structure before using it.
             pe32.dwSize = sizeof( PROCESSENTRY32 );
+            
+            Process32First(hProcessSnap, &pe32);
 
             // Now walk the snapshot of processes, and
             // display information about each process in turn
