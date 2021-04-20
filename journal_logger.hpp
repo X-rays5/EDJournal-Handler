@@ -17,8 +17,16 @@ namespace EDJournalLogger {
     private:
         using EventHandler_t = std::function<void(std::string, std::string)>;
     public:
-        explicit Logger(int checkforneweventinterval) {
+       Logger() {}
+        Logger(int checkforneweventinterval) {
             timebetweenchecks = checkforneweventinterval;
+        }
+        Logger(bool async) {
+            this->async = async;
+        }
+        Logger(int checkforneweventinterval, bool async) {
+            timebetweenchecks = checkforneweventinterval;
+            this->async = async;
         }
 
         void SetEventHandler(EventHandler_t handler) {
@@ -71,6 +79,7 @@ namespace EDJournalLogger {
     private:
 
         int timebetweenchecks = 10000; // time between event updates in ms
+        bool async = false;
 
         EventHandler_t eventhandler_ = nullptr; // default nullptr so there can be a check if the eventhandler was set
 
@@ -88,7 +97,11 @@ namespace EDJournalLogger {
                             if (json["event"].GetString() == "Shutdown") {
                                 return; // returning on game close
                             }
-                            std::invoke(eventhandler_, json["event"].GetString(), std::move(event));
+                            if (async) {
+                                tasks.emplace_back(std::async(std::launch::async, eventhandler_, json["event"].GetString(), std::move(event)));
+                            } else {
+                                std::invoke(eventhandler_, json["event"].GetString(), std::move(event));
+                            }
                         }
                     } else {
                         std::cout << "Failed to parse json for event: " << event << "\n";
