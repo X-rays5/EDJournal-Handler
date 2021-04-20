@@ -120,26 +120,21 @@ namespace EDJournalLogger {
 
         int lasteventline_ = 0;
         std::vector<std::string> CheckForNewEvent(std::string& path) {
-            std::ifstream reader(path, std::ios::binary);
-
-            if (!reader.is_open()) {
-                return {};
+            if (!journalreader_.is_open()) {
+                journalreader_.open(path);
+                if (!journalreader_.is_open()) {
+                    return {}; // return since we're unable to open the file
+                }
+            } else {
+                journalreader_.clear();
             }
 
             std::vector<std::string> events;
             std::string buffer;
-            int curline = 0;
-            while (std::getline(reader, buffer)) {
-                curline++;
-
-                // if there is a new event put it in the vector so it can be returned
-                if (curline > lasteventline_) {
+            while (std::getline(journalreader_, buffer)) {
+                if (buffer.find("{") != std::string::npos || buffer.find("}") != std::string::npos)
                    events.emplace_back(buffer);
-                }
             }
-            reader.close();
-
-            lasteventline_ = curline;
 
             return events;
         }
