@@ -89,6 +89,7 @@ namespace EDJournalLogger {
             auto events = CheckForNewEvent(path);
 
             if (!events.empty()) {
+                std::vector<std::future<void>> tasks;
                 for (auto&& event : events) {
                     rapidjson::Document json;
 
@@ -97,8 +98,9 @@ namespace EDJournalLogger {
                             if (json["event"].GetString() == "Shutdown") {
                                 return; // returning on game close
                             }
+
                             if (async) {
-                                tasks.emplace_back(std::async(std::launch::async, eventhandler_, json["event"].GetString(), std::move(event)));
+                                tasks.emplace_back(std::async(std::launch::async, eventhandler_, json["event"].GetString(), event));
                             } else {
                                 std::invoke(eventhandler_, json["event"].GetString(), std::move(event));
                             }
@@ -107,6 +109,13 @@ namespace EDJournalLogger {
                         std::cout << "Failed to parse json for event: " << event << "\n";
                         std::cout << "Rapidjson error: " << json.GetParseError() << std::endl;
                     }
+                }
+
+                if (!tasks.empty()) {
+                    for (auto&& task : tasks) {
+                        task.wait(); // wait for all event handlers to finish
+                    }
+                    tasks.clear();
                 }
 
                 events.clear();
